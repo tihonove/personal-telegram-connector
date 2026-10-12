@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "telegram": {
+      "command": "mise",
+      "args": ["exec", "--", "uv", "run", "--quiet", "tg-mcp", "stdio"]
+    }
+  }
+}

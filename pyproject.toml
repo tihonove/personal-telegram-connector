@@ -1,0 +1,36 @@
+[project]
+name = "tg-mcp"
+version = "0.1.0"
+description = "MCP connector to a personal Telegram account"
+readme = "README.md"
+authors = [
+    { name = "Eugene Tihonov", email = "tihonov.ea@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "httpx>=0.28",
+    "mcp>=2.3,<3",
+    "qrcode>=8.2",
+    "telethon>=1.45,<2",
+    "tzdata>=2026.5",
+    "uvicorn>=0.54",
+]
+
+[project.scripts]
+tg-mcp = "tg_mcp.server:main"
+tg-mcp-login = "tg_mcp.login:main"
+
+[build-system]
+requires = ["uv_build>=0.12.22,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.17.0",
+]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

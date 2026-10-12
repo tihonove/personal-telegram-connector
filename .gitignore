@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.session
+*.session-journal
+# Секреты в открытом виде — никогда не коммитим
+.env
+.env.*
+!.env.example
+deploy/*.tmp

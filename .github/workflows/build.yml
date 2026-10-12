@@ -1,0 +1,44 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    paths: [src/**, pyproject.toml, uv.lock, Dockerfile, .github/workflows/build.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency: build
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: tag
+        run: echo "tag=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/tg-mcp:${{ steps.tag.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Bump image tag in deploy/
+        run: |
+          sed -i "s/^    newTag: .*/    newTag: ${{ steps.tag.outputs.tag }}/" deploy/kustomization.yaml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "deploy: tg-mcp ${{ steps.tag.outputs.tag }}"
+          git pull --rebase
+          git push

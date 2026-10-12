@@ -1,0 +1,87 @@
+[tools]
+python = "3.13"
+uv = "0.12"
+sops = "3.13"
+kustomize = "5.8"
+node = "22"  # только для MCP Inspector
+
+[env]
+# Локальные секреты (gitignored). Прод-секреты лежат в .env.prod и попадают в кластер только через sops.
+_.file = { path = ".env", redact = true }
+
+[vars]
+app = "tg-mcp"
+host = "tg-mcp.tihonove.dev"
+
+# ---------- разработка ----------
+
+[tasks.setup]
+description = "Зависимости + GPG-ключ владельца платформы (нужен sops для шифрования)"
+run = [
+  "uv sync",
+  "curl -fsSL https://raw.githubusercontent.com/tihonove/tihonove.dev-apps/main/keys/owner.asc | gpg --import",
+]
+
+[tasks.login]
+description = "Войти в Telegram (QR) и записать локальную сессию в .env. --phone — вход по коду"
+run = "uv run tg-mcp-login --env-file .env --device-name 'tg-mcp local'"
+
+[tasks.dev]
+description = "Локальный HTTP-сервер на :8080"
+run = "uv run tg-mcp http --port 8080"
+
+[tasks.inspect]
+description = "MCP Inspector против локального dev-сервера (URL — mise run url)"
+run = "npx -y @modelcontextprotocol/inspector"
+
+[tasks.url]
+description = "Показать URL коннекторов (содержит секрет!)"
+run = '''
+set -e
+[ -f .env ] && echo "local: http://localhost:8080/mcp/$(grep ^MCP_PATH_SECRET= .env | cut -d= -f2-)"
+[ -f .env.prod ] && echo "prod:  https://{{vars.host}}/mcp/$(grep ^MCP_PATH_SECRET= .env.prod | cut -d= -f2-)"
+true
+'''
+
+[tasks.lint]
+run = ["uv run ruff check src", "uv run ruff format --check src"]
+
+[tasks.fmt]
+run = ["uv run ruff check --fix src", "uv run ruff format src"]
+
+# ---------- прод ----------
+
+[tasks."login:prod"]
+description = "Отдельная Telegram-сессия для кластера → .env.prod"
+run = "uv run tg-mcp-login --env-file .env.prod --device-name 'tg-mcp prod'"
+
+[tasks."secrets:encrypt"]
+description = ".env.prod → deploy/secrets.enc.yaml (зашифровано sops, можно коммитить)"
+run = '''
+set -euo pipefail
+uv run python scripts/k8s_secret.py .env.prod \
+  | sops encrypt --filename-override deploy/secrets.enc.yaml --input-type yaml --output-type yaml /dev/stdin \
+  > deploy/secrets.enc.yaml.tmp
+mv deploy/secrets.enc.yaml.tmp deploy/secrets.enc.yaml
+grep -q 'ENC\[AES256_GCM' deploy/secrets.enc.yaml && echo "OK: deploy/secrets.enc.yaml зашифрован"
+'''
+
+[tasks."deploy:build"]
+description = "Проверить, что манифесты собираются"
+run = "kustomize build deploy"
+
+[tasks.release]
+description = "Собрать образ в GitHub Actions и обновить тег в deploy/ (Flux подхватит)"
+run = [
+  "gh workflow run build.yml --ref main",
+  "sleep 5 && gh run watch $(gh run list --workflow build.yml --limit 1 --json databaseId -q '.[0].databaseId')",
+  "git pull --ff-only",
+]
+
+[tasks.status]
+description = "Проверить, что прод отвечает"
+run = "curl -fsS https://{{vars.host}}/healthz && echo"
+
+[tasks.register]
+description = "Открыть PR с регистрацией приложения в tihonove.dev-apps"
+run = "bash scripts/register.sh {{vars.app}}"
