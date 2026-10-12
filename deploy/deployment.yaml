@@ -36,7 +36,7 @@ spec:
             - name: TG_DEVICE_NAME
               value: tg-mcp prod
             - name: TIMEZONE
-              value: Asia/Yekaterinburg
+              value: Europe/Amsterdam
           volumeMounts:
             - name: secrets
               mountPath: /run/secrets/app

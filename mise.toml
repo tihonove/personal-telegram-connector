@@ -7,6 +7,7 @@ node = "22"  # только для MCP Inspector
 
 [env]
 # Локальные секреты (gitignored). Прод-секреты лежат в .env.prod и попадают в кластер только через sops.
+TIMEZONE = "Europe/Amsterdam"
 _.file = { path = ".env", redact = true }
 
 [vars]
