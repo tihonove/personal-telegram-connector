@@ -8,4 +8,4 @@ resources:
 images:
   - name: app
     newName: ghcr.io/tihonove/tg-mcp
-    newTag: TAG
+    newTag: b2073ef
