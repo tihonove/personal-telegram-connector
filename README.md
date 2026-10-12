@@ -14,7 +14,8 @@ MCP-коннектор к личному Telegram-аккаунту (MTProto че
 | `mise run login` | вход в Telegram (QR; `-- --phone` — по коду) → `.env` |
 | `mise run dev` | локальный HTTP-сервер на :8080 |
 | `mise run inspect` | MCP Inspector |
-| `mise run url` | URL коннекторов (с секретом) |
+| `mise run url` | URL коннекторов (с секретом!) |
+| `mise run url:copy` | прод-URL в буфер обмена, без вывода |
 | `mise run login:prod` | отдельная сессия для кластера → `.env.prod` |
 | `mise run secrets:encrypt` | `.env.prod` → `deploy/secrets.enc.yaml` (sops) |
 | `mise run release` | сборка образа в Actions + бамп тега в `deploy/` |

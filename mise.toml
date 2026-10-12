@@ -86,3 +86,7 @@ run = "curl -fsS https://{{vars.host}}/healthz && echo"
 [tasks.register]
 description = "Открыть PR с регистрацией приложения в tihonove.dev-apps"
 run = "bash scripts/register.sh {{vars.app}}"
+
+[tasks."url:copy"]
+description = "Скопировать прод-URL коннектора в буфер обмена, не печатая его"
+run = 'printf "https://{{vars.host}}/mcp/%s" "$(grep ^MCP_PATH_SECRET= .env.prod | cut -d= -f2-)" | wl-copy && echo "Прод-URL в буфере обмена"'
