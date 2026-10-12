@@ -20,6 +20,7 @@ spec:
         runAsNonRoot: true
         runAsUser: 65532
         runAsGroup: 65532
+        fsGroup: 65532
         seccompProfile:
           type: RuntimeDefault
       containers:
@@ -62,7 +63,7 @@ spec:
         - name: secrets
           secret:
             secretName: app-secrets
-            defaultMode: 0400
+            defaultMode: 0440
         - name: tmp
           emptyDir:
             sizeLimit: 64Mi
